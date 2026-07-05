@@ -22,11 +22,12 @@ st.markdown("---")
 def load_models():
     modelo = joblib.load('modelo_absentismo.pkl')
     escalador = joblib.load('escalador_absentismo.pkl')
-    return modelo, escalador
+    columnas_modelo = joblib.load('columnas_modelo.pkl')
+    return modelo, escalador, columnas_modelo
 
 try:
-    modelo, escalador = load_models()
-    st.sidebar.success("✅ IA Conectada con Éxito")
+    modelo, escalador, columnas_modelo = load_models()
+    st.sidebar.success("✅ IA Conectada con Éxito (Regresión Real)")
 except Exception as e:
     st.sidebar.error("❌ Error al cargar los archivos .pkl")
     st.sidebar.write(str(e))
@@ -43,42 +44,48 @@ anos_ascenso = st.sidebar.slider("Años desde el Último Ascenso", min_value=0, 
 satisfaccion = st.sidebar.slider("Satisfacción Laboral (1-4)", min_value=1, max_value=4, value=3, step=1)
 
 # ==========================================
-# MÓDULO PRINCIPAL 1: PREDICCIÓN DE RIESGO DE LA IA
+# MÓDULO PRINCIPAL 1: PREDICCIÓN DE DÍAS REAL DE LA IA
 # ==========================================
 st.subheader("🔮 Diagnóstico Predictivo del Empleado")
-st.write("Presiona el botón para evaluar el perfil del empleado mediante el modelo predictivo.")
+st.write("Evalúa el perfil del empleado mediante el modelo predictivo de regresión lineal entrenado.")
 
 if st.button("Evaluar Riesgo de Absentismo"):
-    # IMPORTANTE: Construimos la fila con las 42 columnas en el mismo orden exacto que get_dummies
-    # Para evitar errores de dimensiones, creamos una plantilla vacía basada en los datos escalados
-    num_features = escalador.mean_.shape[0] # Detecta cuántas columnas espera el escalador (42)
-    
-    # Creamos un vector lleno de ceros
-    datos_entrada = np.zeros((1, num_features))
-    
-    # Inyectamos los valores numéricos en sus posiciones correspondientes de las columnas numéricas bases
-    # Asumiendo los índices iniciales más comunes por orden alfabético/numérico en tu set
-    datos_entrada[0, 0] = media_horas       # Media_Horas_Diarias
-    datos_entrada[0, 1] = ingreso_mensual   # MonthlyIncome
-    datos_entrada[0, 2] = anos_ascenso      # YearsSinceLastPromotion
-    
-    # Escalamos la entrada de la misma manera que en el entrenamiento
-    datos_escalados = escalador.transform(datos_entrada)
-    
-    # Hacemos la predicción mediante el modelo lógico cargado
-    prediccion = modelo.predict(datos_escalados)[0]
-    probabilidad = modelo.predict_proba(datos_escalados)[0][1]
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if prediccion == 1 or probabilidad > 0.5:
-            st.error(f"⚠️ **ALTO RIESGO DE ABSENTISMO**\n\nEste perfil tiene una alta tendencia a registrar ausencias críticas (más de 25 días al año).")
-        else:
-            st.success(f"✅ **RIESGO BAJO / NORMAL**\n\nEl patrón operativo de este empleado se mantiene estable y dentro de los rangos seguros.")
+    try:
+        # 1. Creamos el perfil base usando los PROMEDIOS CORPORATIVOS del escalador.
+        # Esto garantiza que las 40 columnas tengan valores estables y matemáticamente lógicos.
+        datos_base = escalador.mean_.copy().reshape(1, -1)
+        df_entrada = pd.DataFrame(datos_base, columns=columnas_modelo)
+        
+        # 2. Inyección directa y segura usando las llaves exactas mapeadas de tu archivo .pkl
+        df_entrada['Media_Horas_Diarias'] = media_horas
+        df_entrada['MonthlyIncome'] = ingreso_mensual
+        df_entrada['YearsSinceLastPromotion'] = anos_ascenso
+        df_entrada['JobSatisfaction'] = satisfaccion
             
-    with col2:
-        st.metric(label="Probabilidad de Ausencia Crítica", value=f"{probabilidad*100:.1f}%")
+        # 3. Escalamos el vector de características de forma idéntica al entrenamiento
+        datos_escalados = escalador.transform(df_entrada)
+        
+        # 4. PREDECIMOS LOS DÍAS EXACTOS CON LA IA DE REGRESIÓN
+        dias_predichos = modelo.predict(datos_escalados)[0]
+        
+        # Acotamos por seguridad matemática al rango real del dataset original (0 a 24 días)
+        dias_predichos = np.clip(dias_predichos, 0, 24)
+        
+        # 5. Despliegue de Resultados de Regresión en Pantalla
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Si supera la media lógica de ausencias del corporativo (12.7 días), alertamos operativamente
+            if dias_predichos > 13.0:
+                st.error(f"⚠️ **ALTO IMPACTO OPERATIVO**\n\nEste perfil presenta una tendencia a registrar ausencias elevadas, estimando un volumen superior al promedio corporativo.")
+            else:
+                st.success(f"✅ **RANGO OPERATIVO BAJO CONTROL**\n\nEl patrón operativo proyectado para este empleado se mantiene estable dentro de los límites normales.")
+                
+        with col2:
+            st.metric(label="Días de Absentismo Proyectados al Año", value=f"{dias_predichos:.1f} días")
+            
+    except Exception as error_pred:
+        st.error(f"❌ Error en el procesamiento de IA: {str(error_pred)}")
 
 st.markdown("---")
 
@@ -106,4 +113,4 @@ col_m1, col_m2 = st.columns(2)
 col_m1.metric(label="Días Totales de Absentismo Salvados al Año", value=f"{total_dias_evitados:,} días")
 col_m2.metric(label="Ahorro Económico Neto para la Compañía", value=f"${ahorro_financiero:,} USD", delta=f"${ahorro_financiero:,} Ganancia")
 
-st.info("💡 **Conclusión del Analista:** Como los datos demográficos son homogéneos, las políticas corporativas deben enfocarse en regular la estabilidad operativa (evitando picos extremos en la media de horas diarias) para capturar el retorno económico proyectado en este simulador.")
+st.info("💡 **Conclusión del Analista:** Como los datos demográficos son homogéneos, las políticas corporativas deben enfocarse en la estabilidad operativa (evitando picos extremos en la media de horas diarias) para capturar el retorno económico proyectado.")
