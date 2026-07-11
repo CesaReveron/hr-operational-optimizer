@@ -2,6 +2,7 @@
 .venv/
 venv/
 env/
+.env
 
 # Archivos de caché de Python
 __pycache__/
@@ -9,8 +10,18 @@ __pycache__/
 
 # Archivos del sistema
 .DS_Store
+Thumbs.db
+
+# Jupyter
 .ipynb_checkpoints/
 
-# Datos y artefactos de modelos (para mantener el repo ligero)
+# IDEs
+.vscode/
+.idea/
+
+# Datos (mantener el repo ligero — los CSV crudos pesan ~23 MB cada uno)
+data/raw/*.csv
 data/processed/*.csv
+
+# Artefactos de modelos entrenados
 models/*.pkl
