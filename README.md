@@ -4,7 +4,7 @@
 
 Proyecto final de bootcamp de Data Science. Desarrolla un modelo de **regresión** que estima los días de absentismo laboral de un empleado a partir de variables demográficas, de compensación, trayectoria profesional y clima laboral, con el objetivo de dar visibilidad a **COO y CFO** sobre el coste operativo real del absentismo y permitirles simular el ahorro de reducirlo.
 
-🔗 **Repositorio:** _[[text](https://github.com/CesaReveron/hr-operational-optimizer)]_
+🔗 **Repositorio:** _[https://github.com/CesaReveron/hr-operational-optimizer]_
 ✍️ **Autor:** _[Cesar Germain Reveron Garcia]_
 
 ---
