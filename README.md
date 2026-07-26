@@ -51,14 +51,21 @@ HR-OPERATIONAL-OPTIMIZER/
 | Regresión Lineal | 4.73 días | 5.39 | 0.05 |
 | Random Forest Regressor | 4.94 días | 5.69 | -0.06 |
 | Gradient Boosting Regressor | 4.79 días | 5.48 | 0.02 |
+| HistGradientBoosting Regressor | 5.04 días | 5.88 | -0.13 |
+| Poisson Regressor | 4.73 días | 5.38 | 0.05 |
 
-**Modelo seleccionado:** Regresión Lineal (menor RMSE).
+**Modelo seleccionado:** Regresión Lineal (rendimiento equivalente al mejor alternativo probado, con la ventaja de ser el más simple e interpretable).
 
-## ⚠️ Limitaciones conocidas
+Adicionalmente se probó reformular el problema como **clasificación de riesgo** (umbral en el percentil 90 en vez de la mediana), obteniendo un F1-score de solo 0.17 para la clase de riesgo alto — confirma que el techo de rendimiento está en la información disponible, no en el algoritmo o el enfoque elegido.
 
-- El poder predictivo es limitado (R² bajo): las variables disponibles (demografía, encuestas, compensación) explican solo una parte pequeña de la variabilidad real del absentismo. El modelo es más útil como **ordenador de riesgo relativo** entre empleados que como predictor exacto del número de días.
+## ⚠️ Limitaciones conocidas (y qué significan)
+
+Se probaron **5 algoritmos de regresión** distintos, feature engineering adicional (interacciones y ratios entre variables) y una reformulación completa a clasificación de riesgo. Ninguno mejoró de forma significativa sobre la Regresión Lineal base. Esto es un resultado válido en sí mismo, no un fallo de modelado:
+
+- **El poder predictivo es limitado de forma estructural** (R² ≈ 0.05 en todos los enfoques probados): las variables demográficas, salariales y de encuesta disponibles no capturan las causas reales del absentismo (salud, situaciones personales, imprevistos), que simplemente no están en este tipo de datos. El modelo es más útil como **ordenador de riesgo relativo** entre empleados —para priorizar dónde mirar primero— que como predictor exacto del número de días.
 - El target excluye los días de cierre total de empresa, pero un NaN individual en `in_time` puede seguir incluyendo vacaciones planificadas, no solo ausencia real no planificada. Es una limitación de los datos de origen, no del pipeline.
 - `Media_Horas_Diarias` se deriva de los mismos ficheros (`in_time`/`out_time`) de los que sale el target; no hay fuga directa, pero conviene tenerlo presente al interpretar su importancia en el modelo.
+- **Recomendación de negocio derivada de este hallazgo:** si el absentismo importa lo suficiente como para modelarlo con precisión, la organización debería invertir en capturar señales adicionales (encuestas de pulso más frecuentes, feedback directo de managers, historial de incidencias) — el dataset actual, por diseño, tiene un techo de predictibilidad bajo.
 
 ## 🚀 Cómo ejecutar el proyecto
 

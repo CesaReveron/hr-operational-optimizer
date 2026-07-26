@@ -300,6 +300,7 @@ if ejecutar:
             <div class="metric-container">
                 <p style="color: #38BDF8; font-size: 13px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-bottom: 5px;">Ausencia Anual Estimada</p>
                 <div class="metric-value-large">{dias_predichos:.1f} días</div>
+                <p style="color: #64748B; font-size: 12px; margin-top: 8px;">Margen de error promedio del modelo: ± 4.7 días</p>
             </div>
         """, unsafe_allow_html=True)
         
@@ -307,7 +308,7 @@ if ejecutar:
         if dias_predichos > 12:
             st.markdown("""
                 <div class="alert-box alert-high">
-                    <strong>⚠️ ALERTA DE TENDENCIA CRÍTICA:</strong> El algoritmo detecta una propensión superior a la media de la empresa. Se sugiere abrir un canal preventivo de auditoría interna de cargas laborales y balance de vida.
+                    <strong>⚠️ PERFIL DE RIESGO RELATIVO ALTO:</strong> Este perfil se ubica en el grupo con mayor propensión estimada dentro de la plantilla. Recomendado como candidato a revisión preventiva, no como diagnóstico definitivo.
                 </div>
             """, unsafe_allow_html=True)
         else:
@@ -316,6 +317,23 @@ if ejecutar:
                     <strong>✅ RANGO NORMAL COMPROBADO:</strong> Las métricas estimadas reflejan un comportamiento alineado a los estándares estables y saludables corporativos de la organización.
                 </div>
             """, unsafe_allow_html=True)
+            
+    st.markdown("<br>", unsafe_allow_html=True)
+    with st.expander("ℹ️ Nota metodológica: ¿qué tan preciso es este modelo?"):
+        st.markdown("""
+        Este modelo fue evaluado con **MAE ≈ 4.7 días** y **R² ≈ 0.05** sobre datos de test,
+        tras comparar 5 algoritmos distintos (Regresión Lineal, Random Forest, Gradient Boosting,
+        HistGradientBoosting y Poisson Regressor) — todos convergieron a un rendimiento similar.
+
+        Esto significa que las variables demográficas, salariales y de encuesta disponibles
+        **no predicen con alta precisión el número exacto de días de absentismo**. Es un hallazgo
+        legítimo, no una limitación oculta: sugiere que las causas reales del absentismo (salud,
+        situaciones personales) no están capturadas en este tipo de datos.
+
+        **Recomendación de uso:** interpretar la predicción como un **ordenador de riesgo relativo**
+        entre empleados (para priorizar dónde mirar primero), no como un número exacto de días a
+        planificar.
+        """)
 
 # ==========================================
 # SECCIÓN FINANCIERA: SIMULADOR "WHAT-IF"
